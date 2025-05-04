@@ -28,6 +28,7 @@ import { enumIcons } from '../../slash-commands/SlashCommandCommonEnumsProvider.
 import { POPUP_TYPE, callGenericPopup } from '../../popup.js';
 import { GoogleTranslateTtsProvider } from './google-translate.js';
 import { KokoroTtsProvider } from './kokoro.js';
+import { EventEmitter } from '../../../lib/eventemitter.js';
 
 const UPDATE_INTERVAL = 1000;
 const wrapper = new ModuleWorkerWrapper(moduleWorker);
@@ -109,6 +110,8 @@ const ttsProviders = {
 let ttsProvider;
 let ttsProviderName;
 
+export const ttsEventEmitter = new EventEmitter();
+
 
 async function onNarrateOneMessage() {
     audioElement.src = '/sounds/silence.mp3';
@@ -186,7 +189,7 @@ function resetTtsPlayback() {
     audioQueueProcessorReady = true;
 }
 
-function isTtsProcessing() {
+export function isTtsProcessing() {
     let processing = false;
 
     // Check job queues
@@ -385,6 +388,9 @@ function completeCurrentAudioJob() {
     currentAudioJob = null;
     // updateUiPlayState();
     wrapper.update();
+    if (ttsJobQueue.length == 0) {
+        ttsEventEmitter.emit('tts-end');
+    }
 }
 
 /**
